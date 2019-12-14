@@ -408,16 +408,9 @@ MiAirPurifier.prototype = {
 			callback(new Error('No Air Purifier is discovered.'));
 			return;
 		}
-
-		this.device.favoriteLevel()
-			.then(level => {
-				const speed = Math.ceil(level * 6.25);
-				logger.debug('getRotationSpeed: %s', speed);
-				callback(null, speed);
-			})
-			.catch(error => {
-				callback(error);
-			});
+		logger.debug('getRotationSpeed: %s', this.device.property("favorite_level") * 6.25);
+		callback(null, this.device.property("favorite_level") * 6.25);
+		
 	},
 
 	setRotationSpeed: function (speed, callback) {
@@ -440,7 +433,7 @@ MiAirPurifier.prototype = {
 
 		logger.debug('setRotationSpeed: %s', level);
 
-		this.device.setFavoriteLevel(level)
+		this.device.changeFavorite(level)
 			.then(mode => {
 				callback(null);
 			})
