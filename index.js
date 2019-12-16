@@ -409,11 +409,13 @@ MiAirPurifier.prototype = {
 			return;
 		}
 
-		this.device.favoriteLevel()
-			.then(level => {
-				const speed = Math.ceil(level * 6.25);
-				logger.debug('getRotationSpeed: %s', speed);
-				callback(null, speed);
+		await this.device.call('get_prop', ['motor_speed'])
+			.then(result => {
+				const state = result[0];
+
+				logger.debug('getRotationSpeed: %s', state);
+				
+				callback(null, state);
 			})
 			.catch(error => {
 				callback(error);
