@@ -10,7 +10,7 @@ module.exports = function (homebridge) {
 	Service = homebridge.hap.Service;
 	Characteristic = homebridge.hap.Characteristic;
 
-	homebridge.registerAccessory('homebridge-xiaomi-purifier', 'MiAirPurifier', MiAirPurifier);
+	homebridge.registerAccessory('homebridge-xiaomi-purifier3', 'MiAirPurifier', MiAirPurifier);
 }
 
 function MiAirPurifier(log, config) {
@@ -348,7 +348,7 @@ MiAirPurifier.prototype = {
 
 		logger.debug('setTargetAirPurifierState: %s', mode);
 
-		this.device.setMode(mode)
+		this.device.changeMode(mode)
 			.then(mode => {
 				callback(null);
 			})
@@ -411,7 +411,7 @@ MiAirPurifier.prototype = {
 
 		await this.device.call('get_prop', ['motor_speed'])
 			.then(result => {
-				const state = result[0];
+				const state = Math.ceil((result[0] - 300) * 100/2000);
 
 				logger.debug('getRotationSpeed: %s', state);
 				
@@ -430,7 +430,7 @@ MiAirPurifier.prototype = {
 
 		// Overwirte to manual mode
 		if (this.mode != 'favorite') {
-			this.device.setMode('favorite')
+			this.device.changeMode('favorite')
 				.then()
 				.catch(err => {
 					callback(err);
@@ -438,11 +438,11 @@ MiAirPurifier.prototype = {
 		}
 
 		// Set favorite level
-		const level = Math.ceil(speed / 6.25);
+		const favoriteSpeed = Math.ceil((speed * 2000 / 100) + 300);
 
-		logger.debug('setRotationSpeed: %s', level);
+		logger.debug('setRotationSpeed: %s', favoriteSpeed);
 
-		this.device.setFavoriteLevel(level)
+		this.device.changeFavoriteSpeed(favoriteSpeed)
 			.then(mode => {
 				callback(null);
 			})
@@ -578,7 +578,7 @@ MiAirPurifier.prototype = {
 			return;
 		}
 
-		const state = await this.device.led();
+		const state = await this.device.call('get_prop', ['led_brightness']);
 
 		logger.debug('getLED: %s', state);
 
@@ -593,7 +593,7 @@ MiAirPurifier.prototype = {
 
 		logger.debug('setLED: %s', state);
 
-		await this.device.led(state)
+		await this.device.changeLEDBrightness(state)
 			.then(state => {
 				callback(null);
 			})
@@ -608,7 +608,7 @@ MiAirPurifier.prototype = {
 			return;
 		}
 
-		const state = await this.device.buzzer();
+		const state = this.device.call('get_prop', ['buzzer']);
 		
 		logger.debug('getBuzzer: %s', state);
 		
@@ -623,7 +623,7 @@ MiAirPurifier.prototype = {
 
 		logger.debug('setBuzzer: %s', state);
 
-		await this.device.buzzer(state)
+		await this.device.changeBuzzer(state)
 			.then(state => {
 				callback(null);
 			})
